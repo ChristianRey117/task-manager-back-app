@@ -3,6 +3,7 @@ import taskService from "../services/task.service";
 import { sendError, sendSuccess } from "../utils/requestHandler";
 import { ITask } from "models/task";
 import { ResultSetHeader } from "mysql2";
+import { idUserHandler } from "../utils/idUserHandler";
 
 class TaskController {
   async getAllTask(req: Request, res: Response) {
@@ -30,10 +31,17 @@ class TaskController {
 
   async postTask(req: Request, res: Response) {
     try {
-      const data = req.body;
-      const task = taskService.postTask(data);
-      if (task) {
-        sendSuccess(res, task);
+      const iduser = idUserHandler(req);
+      if (iduser) {
+        let data = req.body;
+        data = { ...data, idUser: iduser.userId } as ITask;
+
+        const task = await taskService.postTask(data);
+        if (task) {
+          sendSuccess(res, task);
+        } else {
+          sendError(res, "Task not created");
+        }
       } else {
         sendError(res, "Task not created");
       }
