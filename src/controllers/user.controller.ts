@@ -3,6 +3,7 @@ import userService from "../services/user.service";
 import { sendError } from "../utils/requestHandler";
 import bcrypt from "bcrypt";
 import { IUser } from "models/user";
+import jwt from "jsonwebtoken";
 
 class UserController {
   async getUserById(req: Request, res: Response) {
@@ -51,6 +52,39 @@ class UserController {
 
   async findIsExistUser(email: string): Promise<boolean> {
     return userService.verifyIfExistUser(email);
+  }
+
+  async loginUser(req: Request, res: Response) {
+    try {
+      const { email, password } = req.body;
+
+      // Busca al usuario por su correo electrónico
+      const user = await userService.verifyIfExistUser(email);
+      if (!user) {
+        sendError(res, "Incorrect information.", 401);
+      }
+
+      const userVerify = await userService.getUserByEmail(email);
+
+      // Compara la contraseña proporcionada con la contraseña hasheada en la base de datos
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        userVerify.password
+      );
+      if (!isPasswordValid) {
+        sendError(res, "Incorrect Information.", 401);
+      }
+
+      // Crea un token JWT
+      const token = jwt.sign({ userId: userVerify.id }, "JWT_SECRET", {
+        expiresIn: "1h",
+      }); // Ajusta la expiración según tus necesidades
+
+      res.json({ token });
+    } catch (error) {
+      console.error("Error al iniciar sesión:", error);
+      res.status(500).json({ message: "Error al iniciar sesión." });
+    }
   }
 }
 
