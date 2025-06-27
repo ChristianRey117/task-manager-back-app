@@ -43,7 +43,7 @@ class TaskController {
           sendError(res, "Task not created");
         }
       } else {
-        sendError(res, "Task not created");
+        sendError(res, "Task not created", 401);
       }
     } catch (error: any) {
       sendError(res, error.message);
