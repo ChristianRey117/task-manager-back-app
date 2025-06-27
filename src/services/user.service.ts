@@ -33,6 +33,14 @@ class User {
 
     return result.length > 0;
   }
+
+  async getUserByEmail(email: string) {
+    const result = await db.query<RowDataPacket[]>(
+      `SELECT * FROM user WHERE email = ?`,
+      email
+    );
+    return result[0];
+  }
 }
 
 export default new User();
