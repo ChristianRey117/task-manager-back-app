@@ -4,6 +4,8 @@ import { sendError, sendSuccess } from "../utils/requestHandler";
 import bcrypt from "bcrypt";
 import { IUser } from "models/user";
 import jwt from "jsonwebtoken";
+import { idUserHandler } from "../utils/idUserHandler";
+import { AuthPayload } from "middleware/auth.middleware";
 
 class UserController {
   async getUserById(req: Request, res: Response) {
@@ -89,13 +91,18 @@ class UserController {
 
   async getAllTaskUser(req: Request, res: Response) {
     try {
-      const idUser = Number(req.params["id"]);
-
-      const taskUser = await userService.getTasksByIdUser(idUser);
-      if (taskUser) {
-        sendSuccess(res, taskUser);
+      const iduser = idUserHandler(req);
+      if (iduser) {
+        const taskUser = await userService.getTasksByIdUser(
+          Number(iduser.userId)
+        );
+        if (taskUser) {
+          sendSuccess(res, taskUser);
+        } else {
+          sendError(res, "Error to get task");
+        }
       } else {
-        sendError(res, "Task not created");
+        sendError(res, "Error to get task");
       }
     } catch (error: any) {
       sendError(res, error.message);
